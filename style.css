@@ -1,0 +1,101 @@
+
+/* General settings */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Tahoma, Arial, sans-serif;
+    background-color: #f5f6f8;
+    color: #222;
+    direction: rtl;
+}
+
+/* Header */
+
+header {
+    background-color: #ffffff;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+header h1 {
+    margin: 0 0 10px;
+    font-size: 22px;
+}
+
+header p {
+    margin: 0;
+    color: #777;
+    font-size: 14px;
+}
+
+/* Main content */
+
+main {
+    max-width: 850px;
+    margin: 25px auto;
+    padding: 0 15px;
+}
+
+/* Toolbar */
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #666;
+}
+
+button {
+    background-color: #2684d9;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+button:hover {
+    background-color: #176bb5;
+}
+
+/* Messages */
+
+.message {
+    background-color: white;
+    padding: 18px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    line-height: 2;
+}
+
+.message .date {
+    display: block;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #999;
+}
+
+.empty {
+    text-align: center;
+    color: #999;
+    padding: 40px 10px;
+}
+
+/* Footer */
+
+footer {
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+    padding: 25px;
+}
