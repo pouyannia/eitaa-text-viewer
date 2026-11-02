@@ -1,28 +1,37 @@
 
-// Eitaa Text Viewer
-
 const messagesContainer = document.getElementById("messages");
 const statusElement = document.getElementById("status");
 const refreshButton = document.getElementById("refreshBtn");
 
-// Sample messages for testing
+// تبدیل تاریخ ISO به تاریخ و ساعت شمسی
+function formatDate(dateString) {
+    if (!dateString) return "تاریخ نامشخص";
 
-const sampleMessages = [
-    {
-        text: "به گزارش خبرگزاری فارس، آخرین اخبار و رویدادهای کشور را در این کانال دنبال کنید.",
-        date: "2026-11-01 14:00"
-    },
-    {
-        text: "این یک پیام آزمایشی برای بررسی نحوه نمایش مطالب در صفحه است.",
-        date: "2026-11-01 13:30"
+    const date = new Date(dateString);
+
+    if (isNaN(date.getTime())) {
+        return dateString;
     }
-];
 
-// Display messages
+    return new Intl.DateTimeFormat("fa-IR", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "Asia/Tehran"
+    }).format(date);
+}
 
+// نمایش پیام‌ها
 function displayMessages(messages) {
 
     messagesContainer.innerHTML = "";
+
+    if (!messages || messages.length === 0) {
+        messagesContainer.innerHTML =
+            '<p class="empty">پیامی برای نمایش وجود ندارد.</p>';
+
+        statusElement.textContent = "پیامی دریافت نشد";
+        return;
+    }
 
     messages.forEach(message => {
 
@@ -30,38 +39,62 @@ function displayMessages(messages) {
         article.className = "message";
 
         const content = document.createElement("div");
+        content.className = "content";
         content.textContent = message.text;
 
         const date = document.createElement("span");
         date.className = "date";
-        date.textContent = message.date;
+        date.textContent = formatDate(message.published_at);
 
         article.appendChild(content);
         article.appendChild(date);
 
         messagesContainer.appendChild(article);
-
     });
 
     statusElement.textContent =
         `${messages.length} پیام نمایش داده شد`;
-
 }
 
-// Refresh
+// دریافت اطلاعات از فایل JSON
+async function refreshMessages() {
 
-function refreshMessages() {
+    refreshButton.disabled = true;
+    statusElement.textContent = "در حال دریافت پیام‌ها...";
 
-    statusElement.textContent = "در حال به‌روزرسانی...";
+    try {
 
-    displayMessages(sampleMessages);
+        const response = await fetch(
+            `messages.json?t=${Date.now()}`,
+            { cache: "no-store" }
+        );
 
+        if (!response.ok) {
+            throw new Error("HTTP Error: " + response.status);
+        }
+
+        const data = await response.json();
+
+        displayMessages(data.messages);
+
+    } catch (error) {
+
+        console.error(error);
+
+        statusElement.textContent =
+            "خطا در دریافت اطلاعات";
+
+        messagesContainer.innerHTML =
+            '<p class="empty">دریافت پیام‌ها ناموفق بود. دوباره تلاش کنید.</p>';
+
+    } finally {
+
+        refreshButton.disabled = false;
+    }
 }
 
-// Button event
-
+// اتصال دکمه به‌روزرسانی
 refreshButton.addEventListener("click", refreshMessages);
 
-// Initial display
-
+// دریافت اولیه
 refreshMessages();
