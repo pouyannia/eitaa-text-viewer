@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 
 CHANNEL = "farsna"
-CHANNEL_URL = f"https://eitaa.com/s/{CHANNEL}"
+CHANNEL_URL = f"https://eitaa.com/{CHANNEL}"
 
 
 def fetch_channel():
