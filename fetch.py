@@ -126,29 +126,22 @@ def main():
     html = fetch_channel()
 
     print("HTML length:", len(html))
-    print("HTML preview:")
-    print(html[:2000])
+    print("Page title:")
 
     soup = BeautifulSoup(html, "html.parser")
+    print(soup.title.get_text(strip=True) if soup.title else "No title")
 
-    print("\nPage title:", soup.title.get_text(strip=True) if soup.title else "No title")
+    print("\nFinal URL:", CHANNEL_URL)
 
-    print(
-        "Message elements:",
-        len(soup.select(".etme_widget_message"))
-    )
+    print("\nHTML CONTENT:")
+    print(html)
 
-    print(
-        "Message text elements:",
-        len(soup.select(".js-message_text"))
-    )
+    print("\nScript URLs:")
+    for script in soup.select("script[src]"):
+        print(script.get("src"))
 
-    messages = extract_messages(html)
-
-    print("Extracted messages:", len(messages))
-
-    save_messages(messages)
-
-
+    print("\nMessage-related words:")
+    for word in ["message", "widget", "farsna", "399071", "before"]:
+        print(word, ":", word in html.lower())
 if __name__ == "__main__":
     main()
