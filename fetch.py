@@ -123,10 +123,29 @@ def save_messages(messages):
 
 
 def main():
-
     html = fetch_channel()
 
+    print("HTML length:", len(html))
+    print("HTML preview:")
+    print(html[:2000])
+
+    soup = BeautifulSoup(html, "html.parser")
+
+    print("\nPage title:", soup.title.get_text(strip=True) if soup.title else "No title")
+
+    print(
+        "Message elements:",
+        len(soup.select(".etme_widget_message"))
+    )
+
+    print(
+        "Message text elements:",
+        len(soup.select(".js-message_text"))
+    )
+
     messages = extract_messages(html)
+
+    print("Extracted messages:", len(messages))
 
     save_messages(messages)
 
