@@ -1,9 +1,16 @@
 
 import requests
+import json
+import re
+
 from bs4 import BeautifulSoup
+from datetime import datetime, timezone
+from pathlib import Path
 
 CHANNEL = "farsna"
 CHANNEL_URL = f"https://eitaa.com/{CHANNEL}"
+
+OUTPUT_FILE = Path("messages.json")
 
 
 def fetch_channel():
@@ -21,87 +28,111 @@ def fetch_channel():
         timeout=30
     )
 
-    print("HTTP Status:", response.status_code)
-    print("Final URL:", response.url)
-    print("Content-Type:", response.headers.get("Content-Type"))
-
     response.raise_for_status()
+
+    print("HTTP Status:", response.status_code)
+    print("Downloaded HTML:", len(response.text), "characters")
 
     return response.text
 
 
-def main():
+def extract_messages(html):
 
-    # 1. دریافت HTML
-    html = fetch_channel()
-
-    print("\n========== HTML INFO ==========")
-    print("HTML length:", len(html))
-
-    # 2. تجزیه HTML
     soup = BeautifulSoup(html, "html.parser")
 
-    print("\n========== PAGE TITLE ==========")
+    messages = []
 
-    if soup.title:
-        print(soup.title.get_text(strip=True))
-    else:
-        print("No title")
+    elements = soup.select(".etme_widget_message")
 
-    # 3. بررسی تگ‌های Script
-    print("\n========== SCRIPT URLS ==========")
+    for element in elements:
 
-    for script in soup.select("script[src]"):
-        print(script.get("src"))
+        message_id = element.get("data-post")
 
-    # 4. بررسی تعداد عناصر احتمالی پیام
-    print("\n========== MESSAGE ELEMENTS ==========")
+        content = element.select_one(".js-message_text")
 
-    selectors = [
-        ".etme_widget_message",
-        ".js-message_text",
-        ".etme_widget_message_text",
-        ".etme_widget_message_wrap",
-        "[data-post]"
-    ]
-
-    for selector in selectors:
-        print(
-            selector,
-            ":",
-            len(soup.select(selector))
+        date_element = element.select_one(
+            ".etme_widget_message_date time"
         )
 
-    # 5. جستجوی کلمات مهم در HTML
-    print("\n========== KEYWORDS ==========")
+        if not message_id or not content:
+            continue
 
-    keywords = [
-        "message",
-        "widget",
-        "farsna",
-        "399071",
-        "before",
-        "api",
-        "ajax",
-        "post"
-    ]
+        # حذف لینک‌ها برای نمایش متن ساده
+        for link in content.select("a"):
+            link.decompose()
 
-    html_lower = html.lower()
+        # استخراج متن
+        raw_text = content.get_text(separator="\n")
 
-    for word in keywords:
-        print(
-            word,
-            ":",
-            word in html_lower
+        lines = []
+
+        for line in raw_text.splitlines():
+
+            line = re.sub(r"\s+", " ", line).strip()
+
+            if line:
+                lines.append(line)
+
+        message_text = "\n".join(lines)
+
+        if not message_text:
+            continue
+
+        # استخراج تاریخ انتشار
+        published_at = None
+
+        if date_element:
+            published_at = date_element.get("datetime")
+
+        messages.append({
+            "id": message_id,
+            "text": message_text,
+            "published_at": published_at,
+            "channel": CHANNEL
+        })
+
+    return messages
+
+
+def save_messages(messages):
+
+    if not messages:
+        raise ValueError(
+            "No messages found. Check the source HTML."
         )
 
-    # 6. نمایش 2000 کاراکتر ابتدایی
-    print("\n========== HTML START ==========")
-    print(html[:2000])
+    data = {
+        "channel": CHANNEL,
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "count": len(messages),
+        "messages": messages
+    }
 
-    # 7. نمایش 4000 کاراکتر انتهایی
-    print("\n========== HTML END ==========")
-    print(html[-4000:])
+    OUTPUT_FILE.write_text(
+        json.dumps(
+            data,
+            ensure_ascii=False,
+            indent=2
+        ),
+        encoding="utf-8"
+    )
+
+    print("\nMessages saved successfully.")
+    print("Message count:", len(messages))
+    print("Output file:", OUTPUT_FILE)
+
+
+def main():
+
+    print("Fetching channel:", CHANNEL)
+
+    html = fetch_channel()
+
+    messages = extract_messages(html)
+
+    print("Extracted messages:", len(messages))
+
+    save_messages(messages)
 
 
 if __name__ == "__main__":
