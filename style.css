@@ -99,3 +99,8 @@ footer {
     font-size: 12px;
     padding: 25px;
 }
+
+.message .content {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
